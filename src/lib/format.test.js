@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDistance, formatDuration } from './format.js'
+import { formatCoordinates, formatDistance, formatDuration } from './format.js'
 
 // Intl uses non-breaking spaces for sv-SE; compare with plain spaces
 const plain = (text) => text.replace(/\s/g, ' ')
@@ -40,5 +40,12 @@ describe('formatDuration', () => {
   it('shows less than a minute for very short trips', () => {
     expect(formatDuration(20)).toBe('< 1 min')
     expect(formatDuration(0)).toBe('< 1 min')
+  })
+})
+
+describe('formatCoordinates', () => {
+  it('shows latitude first with five decimals', () => {
+    expect(formatCoordinates([18.0686123, 59.3293456])).toBe('59.32935, 18.06861')
+    expect(formatCoordinates([18, 59])).toBe('59.00000, 18.00000')
   })
 })

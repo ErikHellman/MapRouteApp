@@ -4,10 +4,6 @@ export const STORAGE_KEY = 'maproute.savedRoutes.v1'
 const round = (value) => Math.round(value * 1e5) / 1e5
 const roundPosition = ([lng, lat]) => [round(lng), round(lat)]
 
-function defaultStorage() {
-  return globalThis.localStorage
-}
-
 export function createSavedRoute({ name, from, to, route }, now = new Date()) {
   return {
     id: crypto.randomUUID(),
@@ -45,18 +41,20 @@ function isSavedRoute(value) {
   )
 }
 
-export function loadRoutes(storage = defaultStorage()) {
+// Even reading the localStorage property can throw (e.g. blocked site data),
+// so it is resolved inside the try blocks below
+export function loadRoutes(storage) {
   try {
-    const parsed = JSON.parse(storage.getItem(STORAGE_KEY) ?? '[]')
+    const parsed = JSON.parse((storage ?? globalThis.localStorage).getItem(STORAGE_KEY) ?? '[]')
     return Array.isArray(parsed) ? parsed.filter(isSavedRoute) : []
   } catch {
     return []
   }
 }
 
-export function storeRoutes(routes, storage = defaultStorage()) {
+export function storeRoutes(routes, storage) {
   try {
-    storage.setItem(STORAGE_KEY, JSON.stringify(routes))
+    (storage ?? globalThis.localStorage).setItem(STORAGE_KEY, JSON.stringify(routes))
   } catch (error) {
     if (error?.name === 'QuotaExceededError') {
       throw new Error('Webbläsarens lagring är full. Ta bort några sparade rutter och försök igen.', { cause: error })

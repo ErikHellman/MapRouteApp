@@ -1,3 +1,4 @@
+import { formatCoordinates } from '../lib/format.js'
 import { requestMapbox } from './mapbox.js'
 
 function toSuggestion(feature) {
@@ -32,7 +33,7 @@ export async function searchPlaces(query, { proximity, signal } = {}) {
 // Keeps the given coordinates so a marker stays exactly where the user put it
 export async function reverseGeocode(coordinates, { signal } = {}) {
   const [longitude, latitude] = coordinates
-  const fallback = { name: `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`, coordinates }
+  const fallback = { name: formatCoordinates(coordinates), coordinates }
   try {
     const { ok, body } = await requestMapbox(
       '/search/geocode/v6/reverse',

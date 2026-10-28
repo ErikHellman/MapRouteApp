@@ -27,3 +27,7 @@ export function formatDuration(seconds) {
   }
   return minutes === 0 ? `${hours} tim` : `${hours} tim ${minutes} min`
 }
+
+export function formatCoordinates([longitude, latitude]) {
+  return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
+}
