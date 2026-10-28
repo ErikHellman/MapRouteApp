@@ -16,6 +16,7 @@ const feature = (overrides = {}) => ({
     place_formatted: 'Sverige',
     full_address: 'Stockholm, Sverige',
     coordinates: { longitude: 18.0686, latitude: 59.3293 },
+    context: { place: { name: 'Stockholm' }, country: { name: 'Sverige' } },
     ...overrides,
   },
 })
@@ -75,20 +76,38 @@ describe('searchPlaces', () => {
         id: 'abc',
         name: 'Stockholm',
         place: 'Sverige',
-        fullName: 'Stockholm, Sverige',
+        label: 'Stockholm',
         coordinates: [18.0686, 59.3293],
       },
     ])
   })
 
-  it('uses the name when a feature has no full address', async () => {
+  it('labels addresses and streets with their city', async () => {
     fetchMock.mockResolvedValue(
-      jsonResponse({ features: [feature({ full_address: undefined, place_formatted: undefined })] }),
+      jsonResponse({
+        features: [
+          feature({
+            name: 'Kungsgatan 12',
+            place_formatted: '111 35 Stockholm, Sverige',
+            context: { place: { name: 'Stockholm' }, street: { name: 'Kungsgatan' } },
+          }),
+        ],
+      }),
     )
 
-    const [result] = await searchPlaces('Stock')
+    const [result] = await searchPlaces('Kungsgatan')
 
-    expect(result.fullName).toBe('Stockholm')
+    expect(result.label).toBe('Kungsgatan 12, Stockholm')
+  })
+
+  it('uses the bare name when there is no city context', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ features: [feature({ name: 'Sverige', place_formatted: undefined, context: {} })] }),
+    )
+
+    const [result] = await searchPlaces('Sver')
+
+    expect(result.label).toBe('Sverige')
     expect(result.place).toBe('')
   })
 
@@ -107,7 +126,9 @@ describe('searchPlaces', () => {
 
 describe('reverseGeocode', () => {
   it('names the clicked position and keeps its coordinates', async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ features: [feature({ full_address: 'Kungsgatan 1, Stockholm' })] }))
+    fetchMock.mockResolvedValue(
+      jsonResponse({ features: [feature({ name: 'Kungsgatan 1', context: { place: { name: 'Stockholm' } } })] }),
+    )
 
     const point = await reverseGeocode([18.07, 59.33])
 
@@ -117,6 +138,8 @@ describe('reverseGeocode', () => {
     expect(url.searchParams.get('latitude')).toBe('59.33')
     expect(url.searchParams.get('language')).toBe('sv')
     expect(url.searchParams.get('limit')).toBe('1')
+    // Postcodes make poor names for a clicked point, so they are left out
+    expect(url.searchParams.get('types').split(',')).not.toContain('postcode')
     expect(point).toEqual({ name: 'Kungsgatan 1, Stockholm', coordinates: [18.07, 59.33] })
   })
 

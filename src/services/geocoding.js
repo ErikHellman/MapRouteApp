@@ -1,13 +1,22 @@
 import { formatCoordinates } from '../lib/format.js'
 import { requestMapbox } from './mapbox.js'
 
+// Postcodes make poor names for a clicked point
+const REVERSE_TYPES = 'address,street,neighborhood,locality,place,region,country'
+
+// Short enough for an input field: "Kungsgatan 12, Stockholm" or "Göteborg"
+function labelFor({ name, context }) {
+  const city = context?.place?.name
+  return city && city !== name ? `${name}, ${city}` : name
+}
+
 function toSuggestion(feature) {
-  const { name, place_formatted, full_address } = feature.properties
+  const { name, place_formatted } = feature.properties
   return {
     id: feature.id,
     name,
     place: place_formatted ?? '',
-    fullName: full_address ?? name,
+    label: labelFor(feature.properties),
     coordinates: feature.geometry.coordinates,
   }
 }
@@ -37,11 +46,11 @@ export async function reverseGeocode(coordinates, { signal } = {}) {
   try {
     const { ok, body } = await requestMapbox(
       '/search/geocode/v6/reverse',
-      { longitude, latitude, language: 'sv', limit: '1' },
+      { longitude, latitude, language: 'sv', limit: '1', types: REVERSE_TYPES },
       { signal },
     )
     const feature = ok ? body.features?.[0] : undefined
-    return feature ? { name: toSuggestion(feature).fullName, coordinates } : fallback
+    return feature ? { name: labelFor(feature.properties), coordinates } : fallback
   } catch (error) {
     if (error.name === 'AbortError') {
       throw error

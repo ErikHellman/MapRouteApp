@@ -29,7 +29,8 @@
   min-height: 320px;
 }
 
-.map-container {
+/* Two classes so this beats .mapboxgl-map { position: relative } from mapbox-gl.css */
+.map .map-container {
   position: absolute;
   inset: 0;
 }

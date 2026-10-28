@@ -61,8 +61,11 @@ export default function MapView({ from, to, routeGeometry, onMapClick, onMarkerD
 
     map.on('load', () => {
       map.addSource(ROUTE_SOURCE, { type: 'geojson', data: EMPTY_ROUTE })
-      // Draw the route below the first label layer so place names stay readable
-      const firstLabelLayer = map.getStyle().layers.find((layer) => layer.type === 'symbol')
+      // Draw the route above all roads but below the labels so place names stay readable.
+      // Icon-only symbols (tunnel arrows) come before the roads, so look for text.
+      const firstLabelLayer = map
+        .getStyle()
+        .layers.find((layer) => layer.type === 'symbol' && layer.layout?.['text-field'])
       map.addLayer(
         {
           id: 'route-line',

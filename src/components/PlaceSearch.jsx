@@ -68,7 +68,7 @@ export default function PlaceSearch({ label, color, placeholder, point, getProxi
 
   function select(suggestion) {
     closeSuggestions()
-    onSelect({ name: suggestion.fullName, coordinates: suggestion.coordinates })
+    onSelect({ name: suggestion.label, coordinates: suggestion.coordinates })
   }
 
   function handleKeyDown(event) {
